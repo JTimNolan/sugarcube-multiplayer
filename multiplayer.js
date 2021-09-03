@@ -75,7 +75,7 @@ const firebaseConfig = {
           
           await initDB();
           
-          SugarCube.Engine.play(Config.passages.start);
+          SugarCube.Engine.play(SugarCube.Config.passages.start);
           ready = true;
           LoadScreen.unlock(lsLockID);
           
@@ -85,11 +85,11 @@ const firebaseConfig = {
       }
       
       function configure(){
-          Config.saves.autoload = false;
-          Config.saves.autosave = false;
-          Config.saves.isAllowed = () => {false};
-          Config.history.maxStates = 1;
-          Config.history.controls = false;
+          SugarCube.Config.saves.autoload = false;
+          SugarCube.Config.saves.autosave = false;
+          SugarCube.Config.saves.isAllowed = () => {false};
+          SugarCube.Config.history.maxStates = 1;
+          SugarCube.Config.history.controls = false;
           document.getElementById('menu-item-saves').style.display = 'none';
           document.getElementById('menu-item-restart').style.display = 'none';
       }
