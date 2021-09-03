@@ -51,18 +51,18 @@ const firebaseConfig = {
       
       function buildRefEvents(){
           worldRef.onSnapshot(doc => {
-              State.variables.world = doc.data();
-              console.log("World Updated: ", State.variables.world);
+            SugarCube.State.variables.world = doc.data();
+            console.log("World Updated: ", SugarCube.State.variables.world);
           });
           roomRef.onSnapshot(doc => {
-              State.variables.room = doc.data();
-              console.log("Room Updated: ", State.variables.room);
+            SugarCube.State.variables.room = doc.data();
+              console.log("Room Updated: ", SugarCube.State.variables.room);
           });
           playerRef.onSnapshot(doc => {
               Object.entries(doc.data()).forEach(([key, val]) => {
-                  State.variables[key] = val;
+                SugarCube.State.variables[key] = val;
               });
-              console.log("Player Updated: ", State.variables);
+              console.log("Player Updated: ", SugarCube.State.variables);
           });
       }
       
@@ -77,7 +77,7 @@ const firebaseConfig = {
           
           SugarCube.Engine.play(SugarCube.Config.passages.start);
           ready = true;
-          LoadScreen.unlock(lsLockID);
+          SugarCube.LoadScreen.unlock(lsLockID);
           
           $(document).on(':passagerender', e => {
               save();
