@@ -67,7 +67,7 @@ const firebaseConfig = {
       }
       
       async function start(){
-          lsLockID = SugarCube.LoadScreen.lock();
+          lsLockID = LoadScreen.lock();
           
           SugarCube.State.reset();
           SugarCube.State.variables.world = {};
@@ -77,7 +77,7 @@ const firebaseConfig = {
           
           SugarCube.Engine.play(SugarCube.Config.passages.start);
           ready = true;
-          SugarCube.LoadScreen.unlock(lsLockID);
+          LoadScreen.unlock(lsLockID);
           
           $(document).on(':passagerender', e => {
               save();
