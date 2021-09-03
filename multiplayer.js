@@ -67,7 +67,7 @@ const firebaseConfig = {
       }
       
       async function start(){
-          lsLockID = LoadScreen.lock();
+          lsLockID = SugarCube.LoadScreen.lock();
           
           SugarCube.State.reset();
           SugarCube.State.variables.world = {};
