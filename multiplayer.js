@@ -67,7 +67,7 @@ window.Multiplayer = (function(){
                 }
             } else {
                 log(response);
-                return {success: false, errors};
+                return {success: false, e};
             }
         }
         log(response);
@@ -85,20 +85,61 @@ window.Multiplayer = (function(){
     }
     
     function save(){
+        // TODO: Only save differences
         if(!ready){return false};
         const saveData = {...SugarCube.State.variables};
-        log("Saving data", playerID, saveData)
+        log("Saving data", Multiplayer.playerID, saveData)
         try {
-            storyRef.set({...storyData, state: saveData.world});
+            storyRef.set({
+                ...storyData,
+                state: saveData.world,
+                lastUpdateBy: getUser().uid,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            });
         } catch(e){console.warn(e)}
         try {
-            roomRef.set({...roomData, state: saveData.room});
+            roomRef.set({
+                ...roomData,
+                state: saveData.room,
+                lastUpdateBy: getUser().uid,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            });
         } catch(e){console.warn(e)}
         delete saveData.world;
         delete saveData.room;
         try {
-            playerRef.set({...playerData, state: saveData});
+            playerRef.set({
+                ...playerData,
+                state: saveData,
+                lastUpdateBy: getUser().uid,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            });
         } catch(e){console.warn(e)}
+    }
+
+    async function joinRoom(newRoomID, segmentToPlay){
+        log("Joining room", newRoomID);
+        try {
+            await playerRef.set({room: newRoomID}, {merge: true});
+            log("Joined, resetting refs");
+            Multiplayer.roomID = newRoomID;
+            await resetPlayerRefs();
+            SugarCube.Engine.play(segmentToPlay || imports.start || SugarCube.Config.passages.start);
+        } catch(e){
+            console.error(e);
+        }
+    }
+
+    async function createRoom(segmentToPlay){
+        log("Creating room");
+        roomRef = await roomsRef.add({
+            owner: getUser().uid,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            state: {},
+        });
+        log(roomRef);
+        joinRoom(roomRef.id, segmentToPlay);
     }
     
     async function initDB(){
@@ -136,15 +177,19 @@ window.Multiplayer = (function(){
         if(res.docs.length){
             playerData = res.docs[0].data();
             log("Player data loaded", res.docs[0].id, playerData);
-            playerID = res.docs[0].id;
-            playerRef = playersRef.doc(playerID);
+            Multiplayer.playerID = res.docs[0].id;
+            Multiplayer.roomID = playerData.room;
+            playerRef = playersRef.doc(Multiplayer.playerID);
         } else {
             playerRef = await playersRef.add({
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                room: 'lobby',
                 owner: getUser().uid,
                 state: {},
             });
             log("Player created: ", playerRef.id);
-            playerID = playerRef.id;
+            Multiplayer.playerID = playerRef.id;
             Object.keys(SugarCube.State.variables).forEach(key => {
                 if(['room', 'world'].includes(key)){
                     return;
@@ -160,7 +205,7 @@ window.Multiplayer = (function(){
             });
             log("Player Updated: ", playerData.state);
         });
-        roomRef = roomsRef.doc(roomID);
+        roomRef = roomsRef.doc(Multiplayer.roomID);
         unsubs.room = roomRef.onSnapshot(doc => {
             roomData = doc.data();
             SugarCube.State.variables.room = roomData.state;
@@ -251,6 +296,8 @@ window.Multiplayer = (function(){
         login,
         logout,
         isLoggedIn,
+        joinRoom,
+        createRoom,
         validateLogin: () => {},
     };
 })();
